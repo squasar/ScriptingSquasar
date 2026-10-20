@@ -4,13 +4,13 @@
   Finds registered linked Git worktrees below a directory and removes only clean,
   verified-merged worktrees when -Apply is supplied. Optionally fast-forwards main.
 .EXAMPLE
-  .\Remove-MergedWorktrees.ps1 -Root 'C:\squasar\github'
+  .\Remove-MergedWorktrees.ps1 -Root 'C:\Dev\github'
 .EXAMPLE
-  .\Remove-MergedWorktrees.ps1 -Root 'C:\squasar\github' -Fetch -CheckGitHubPRs
+  .\Remove-MergedWorktrees.ps1 -Root 'C:\Dev\github' -Fetch -CheckGitHubPRs
 .EXAMPLE
-  .\Remove-MergedWorktrees.ps1 -Root 'C:\squasar\github' -UpdateMain -CheckGitHubPRs -Apply
+  .\Remove-MergedWorktrees.ps1 -Root 'C:\Dev\github' -UpdateMain -CheckGitHubPRs -Apply
 .EXAMPLE
-  .\Remove-MergedWorktrees.ps1 -Root 'C:\squasar\github' -RecoverOrphanedPaths 'C:\squasar\github\Repo-old-worktree' -Apply
+  .\Remove-MergedWorktrees.ps1 -Root 'C:\Dev\github' -RecoverOrphanedPaths 'C:\Dev\github\Repo-old-worktree' -Apply
 .NOTES
   Worktrees, NOT independent git clones. Dry-run by default.
   Uses origin/main when present, otherwise local main. GitHub PR lookup requires
