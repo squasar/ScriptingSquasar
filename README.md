@@ -1,4 +1,15 @@
-# Remove-MergedWorktrees
+# ScriptingSquasar
+
+`ScriptingSquasar`, günlük geliştirme ve depo bakım işlerini daha güvenli,
+tekrarlanabilir ve anlaşılır hâle getiren PowerShell ve otomasyon scriptleri
+için oluşturulmuş bir koleksiyondur.
+
+Depodaki ilk araç `Remove-MergedWorktrees.ps1` dosyasıdır. İleride benzer Git,
+Windows, worktree, build çıktısı ve geliştirme ortamı bakım işlerini hedefleyen
+başka scriptler de aynı depoya eklenebilir. Her yeni scriptin amacı, riskleri ve
+kullanım örnekleri kendi belgelendirmesiyle açıkça belirtilecektir.
+
+## Remove-MergedWorktrees.ps1
 
 `Remove-MergedWorktrees.ps1`, bir kök klasörün altındaki Git depolarını ve bu
 depolara kayıtlı linked worktree'leri bulan, yalnızca temiz olduğu ve `main`
@@ -68,7 +79,7 @@ Temizliği iki aşamada yapmak en güvenli yöntemdir.
 
 ```powershell
 .\Remove-MergedWorktrees.ps1 `
-    -Root 'C:\squasar\github' `
+    -Root 'C:\Dev\github' `
     -UpdateMain `
     -CheckGitHubPRs `
     -SkipGeneratedDirs `
@@ -82,7 +93,7 @@ değiştirilmez. Script yalnızca yapılabilecek işlemleri raporlar.
 
 ```powershell
 .\Remove-MergedWorktrees.ps1 `
-    -Root 'C:\squasar\github' `
+    -Root 'C:\Dev\github' `
     -UpdateMain `
     -CheckGitHubPRs `
     -SkipGeneratedDirs `
@@ -104,7 +115,7 @@ Bu kullanım:
 Taranacak kök klasörü belirler. Verilmezse mevcut çalışma dizini kullanılır.
 
 ```powershell
-.\Remove-MergedWorktrees.ps1 -Root 'C:\squasar\github'
+.\Remove-MergedWorktrees.ps1 -Root 'C:\Dev\github'
 ```
 
 ### `-Apply`
@@ -204,27 +215,27 @@ tam yolları güvenlik kontrollerinden geçirir.
 
 ```powershell
 .\Remove-MergedWorktrees.ps1 `
-    -Root 'C:\squasar\github' `
+    -Root 'C:\Dev\github' `
     -SkipGeneratedDirs `
     -AllowIgnored `
-    -RecoverOrphanedPaths 'C:\squasar\github\MyRepo-old-worktree'
+    -RecoverOrphanedPaths 'C:\Dev\github\MyRepo-old-worktree'
 ```
 
 Ardından aynı komuta `-Apply` eklenebilir:
 
 ```powershell
 .\Remove-MergedWorktrees.ps1 `
-    -Root 'C:\squasar\github' `
+    -Root 'C:\Dev\github' `
     -SkipGeneratedDirs `
     -AllowIgnored `
-    -RecoverOrphanedPaths 'C:\squasar\github\MyRepo-old-worktree' `
+    -RecoverOrphanedPaths 'C:\Dev\github\MyRepo-old-worktree' `
     -Apply
 ```
 
 Birden fazla tam yol virgülle verilebilir:
 
 ```powershell
--RecoverOrphanedPaths 'C:\squasar\github\MyRepo-task-a','C:\squasar\github\MyRepo-task-b'
+-RecoverOrphanedPaths 'C:\Dev\github\MyRepo-task-a','C:\Dev\github\MyRepo-task-b'
 ```
 
 Yetim kalıntı kurtarmanın güvenlik sınırları:
@@ -366,3 +377,19 @@ Script kilidi zorla aşmaz.
 
 - `Remove-MergedWorktrees.ps1`: Temizlik ve main güncelleme scripti
 - `README.md`: Kullanım ve güvenlik belgesi
+- `LICENSE`: MIT lisansı
+
+## Gelecek scriptler
+
+Bu depo tek bir araca bağlı değildir. Aynı güvenli tasarım yaklaşımını izleyen
+yeni bakım ve otomasyon scriptleri ileride eklenebilir. Yeni araçlar mümkün
+olduğunca:
+
+- varsayılan olarak önizleme modunda çalışacak,
+- yıkıcı işlemler için açık bir uygulama parametresi isteyecek,
+- işlem sınırlarını ve korunacak verileri belgeleyerek ilerleyecek,
+- kişisel yollar, hesap bilgileri veya credential içermeyecektir.
+
+## Lisans
+
+Bu depodaki içerik [MIT Lisansı](LICENSE) altında sunulur.
