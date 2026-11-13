@@ -4,10 +4,136 @@
 tekrarlanabilir ve anlaşılır hâle getiren PowerShell ve otomasyon scriptleri
 için oluşturulmuş bir koleksiyondur.
 
-Depodaki ilk araç `Remove-MergedWorktrees.ps1` dosyasıdır. İleride benzer Git,
-Windows, worktree, build çıktısı ve geliştirme ortamı bakım işlerini hedefleyen
-başka scriptler de aynı depoya eklenebilir. Her yeni scriptin amacı, riskleri ve
-kullanım örnekleri kendi belgelendirmesiyle açıkça belirtilecektir.
+Depoda Git istatistikleri ve worktree bakımı için bağımsız araçlar bulunur. Her
+scriptin amacı, riskleri ve kullanım örnekleri aşağıda açıklanır.
+
+## ShowStats.ps1
+
+`ShowStats.ps1`, seçilen bir remote branch üzerindeki merge olmayan commitleri
+yazar adına göre filtreler ve sayısal satır değişikliklerini dosya bazında
+özetler. Sonuçları CSV dosyasına yazar; konsolda en çok değişen dosyaları,
+kategori toplamlarını ve genel toplamları gösterir.
+
+Script yalnızca Git geçmişini okur ve varsayılan olarak `git fetch` çalıştırarak
+remote bilgisini yeniler. Commit, push, merge, reset veya çalışma ağacında dosya
+değişikliği yapmaz. Oluşturduğu tek dosya, `-OutputPath` ile belirtilen yerel CSV
+raporudur.
+
+### Gereksinimler
+
+- Windows PowerShell 5.1 veya daha yeni uyumlu PowerShell
+- Git ve `PATH` içinde erişilebilir `git`
+- İncelenecek depoda yapılandırılmış bir Git remote'u
+
+### Temel kullanım
+
+Script, istatistiği çıkarılacak Git deposunun çalışma dizininde
+çalıştırılmalıdır. Script başka bir klasörde tutuluyorsa tam yoluyla çağrılabilir:
+
+```powershell
+Set-Location 'C:\Dev\MyProject'
+& 'C:\Dev\ScriptingSquasar\ShowStats.ps1' -Author 'Developer Name'
+```
+
+Yazar filtresinde kullanılabilecek ad ve e-posta değerlerini görmek için hedef
+depoda şu komut çalıştırılabilir:
+
+```powershell
+git log --format='%an <%ae>' | Sort-Object -Unique
+```
+
+Daha kesin eşleşme gerektiğinde ad yerine commitlerdeki e-posta kullanılabilir:
+
+```powershell
+& 'C:\Dev\ScriptingSquasar\ShowStats.ps1' `
+    -Author 'developer@example.com'
+```
+
+`-Author`, Git'in `--author` filtresine aktarılır ve ad ya da e-posta üzerinde
+büyük/küçük harf duyarsız bir regex eşleşmesi yapar. Script herhangi bir kişiye
+ait ad veya e-postayı kaynak kodunda saklamaz; değer her çalıştırmada kullanıcı
+tarafından açıkça verilir.
+
+### Gelişmiş kullanım
+
+```powershell
+& 'C:\Dev\ScriptingSquasar\ShowStats.ps1' `
+    -Author 'Developer Name' `
+    -Remote origin `
+    -Branch develop `
+    -Top 20 `
+    -OutputPath '.\reports\developer-impact.csv'
+```
+
+Bu örnek `origin/develop` dalını yeniler, eşleşen yazarın istatistiklerini
+çıkarır, konsolda ilk 20 dosyayı gösterir ve CSV raporunu belirtilen yola yazar.
+Çıktı klasörü önceden var olmalıdır.
+
+### Parametreler
+
+#### `-Author <desen>`
+
+Zorunludur. `git log --author` için kullanılacak ad, e-posta veya regex
+desenidir. Birden fazla e-posta kullanan aynı kişi için Git regex'i verilebilir:
+
+```powershell
+.\ShowStats.ps1 -Author 'first@example\.com|second@example\.com'
+```
+
+#### `-Remote <ad>`
+
+Fetch edilecek remote adıdır. Varsayılan değer `origin` olur. Verilen remote'un
+hedef depoda bulunması gerekir.
+
+#### `-Branch <ad>`
+
+İncelenecek remote branch'tir. Varsayılan değer `main` olur. Script bu değeri
+`<Remote>/<Branch>` biçiminde okur.
+
+#### `-OutputPath <yol>`
+
+CSV raporunun yoludur. Varsayılan değer `.\file-impact.csv` olur. Göreli yol,
+script dosyasına göre değil komutun çalıştırıldığı hedef depo klasörüne göre
+çözülür.
+
+#### `-Top <sayı>`
+
+Konsol tablosunda gösterilecek dosya sayısıdır. Varsayılan değer `30`, izin
+verilen aralık `1-1000` olur. CSV her zaman eşleşen dosyaların tamamını içerir.
+
+#### `-NoFetch`
+
+`git fetch` adımını atlar ve yerelde mevcut remote-tracking referansını kullanır:
+
+```powershell
+.\ShowStats.ps1 -Author 'Developer Name' -NoFetch
+```
+
+Bu seçenek çevrimdışı kullanım için yararlıdır ancak sonuçlar son fetch'ten
+sonraki remote commitlerini içermez.
+
+### CSV alanları
+
+- `File`: Depo köküne göre dosya yolu
+- `Category`: `TEST`, `DOCUMENTATION`, `CI` veya `SOURCE_OR_OTHER`
+- `Commits`: Dosyayı etkileyen benzersiz commit sayısı
+- `Added`: Eklenen sayısal satır toplamı
+- `Deleted`: Silinen sayısal satır toplamı
+- `Net`: `Added - Deleted`
+- `TotalChanges`: `Added + Deleted`
+
+Rapor `TotalChanges` alanına göre büyükten küçüğe sıralanır. Test, dokümantasyon
+ve CI sınıflandırması dosya yolu ve uzantı desenlerine göre yapılır.
+
+### Sınırlar ve gizlilik
+
+- Merge commitleri `--no-merges` ile hesaba katılmaz.
+- Git'in sayısal satır sayısı vermediği binary değişiklikler rapora eklenmez.
+- Sonuçlar katkı yoğunluğunu gösterir; kod sahipliği veya kalite ölçümü değildir.
+- Script adı, e-posta adresi, kullanıcı klasörü, token veya credential içermez.
+- CSV yalnızca yerel diske yazılır ve script tarafından hiçbir servise yüklenmez.
+- Varsayılan fetch, yalnızca hedef depoda zaten tanımlı olan remote ile iletişim
+  kurar.
 
 ## Remove-MergedWorktrees.ps1
 
@@ -375,6 +501,7 @@ Script kilidi zorla aşmaz.
 
 ## Dosyalar
 
+- `ShowStats.ps1`: Yazar ve dosya bazlı Git değişiklik istatistiği scripti
 - `Remove-MergedWorktrees.ps1`: Temizlik ve main güncelleme scripti
 - `README.md`: Kullanım ve güvenlik belgesi
 - `LICENSE`: MIT lisansı
